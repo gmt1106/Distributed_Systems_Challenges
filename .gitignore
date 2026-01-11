@@ -29,4 +29,11 @@ go.work.sum
 
 # Editor/IDE
 # .idea/
-# .vscode/
+.vscode/
+
+# macOS
+.DS_Store
+
+# dependent project 
+maelstrom/
+store/
