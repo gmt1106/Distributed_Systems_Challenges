@@ -1,6 +1,6 @@
 # Distributed_Systems_Challenges
 
-This project is to solve 5 distributed systems challenges created by Fly.io
+This project is to solve 6 distributed systems challenges created by Fly.io
 
 Challenges:
 
