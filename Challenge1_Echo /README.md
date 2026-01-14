@@ -2,6 +2,8 @@
 
 ## How to Run
 
+**How to set up dependencies**
+
 1. Donwload depednecies that are need to run Maelstorm in Installing Maelstrom step
 
 - `bash brew install openjdk graphviz gnuplot`
@@ -22,7 +24,9 @@
     go install .
   ```
 
-5. Execute Maelstorm with the path to the Challenge1_Echo binary
+**How to execuate the code with Maelstorm**
+
+1. Execute Maelstorm with the path to the Challenge1_Echo binary
 
 - ```bash
     ./maelstrom/maelstrom test -w echo --bin ~/go/bin/Challenge1_Echo --node-count 1 --time-limit 10
@@ -39,7 +43,7 @@ We’ve created a Maelstrom Go library which provides maelstrom.Node that handle
 
 ### Specification
 
-In this challenge, your node will receive an "echo" message from Maelstrom that looks like this:
+In this challenge, your node will receive an "echo" message that looks like this from Maelstrom's [Echo](https://github.com/jepsen-io/maelstrom/blob/main/doc/workloads.md#workload-echo) workload:
 
 ```json
 {
