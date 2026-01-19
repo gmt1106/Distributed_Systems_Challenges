@@ -23,7 +23,7 @@
 - ```bash
     ./maelstrom/maelstrom test -w unique-ids --bin ~/go/bin/Challenge2_Unique_ID_Generation --time-limit 30 --rate 1000 --node-count 3 --availability total --nemesis partition
   ```
-- single node, run for 10 secs
+- three node, run for 30 secs
 
 ## Solution Explanation
 
@@ -48,7 +48,7 @@ Give up:
 
 - Consistency
 
-### Solution approach
+### Solution
 
 #### Basic logic
 
