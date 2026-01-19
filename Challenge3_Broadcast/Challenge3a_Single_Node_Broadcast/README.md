@@ -1,4 +1,4 @@
-# Challenge3: Single-Node Broadcast
+# Challenge3a: Single-Node Broadcast
 
 ## How to Run
 
@@ -10,7 +10,7 @@
     go get github.com/jepsen-io/maelstrom/demo/go
   ```
 
-2. Build the Challenge2_Unique_ID_Generation binary and place it in $GOBIN (typically ~/go/bin)
+2. Build the Challenge3a_Single_Node_Broadcast binary and place it in $GOBIN (typically ~/go/bin)
 
 - ```bash
     go install .
@@ -23,7 +23,7 @@
 - ```bash
     ./maelstrom/maelstrom test -w broadcast --bin ~/go/bin/Challenge3a_Single_Node_Broadcast --node-count 1 --time-limit 20 --rate 10
   ```
-- single node, run for 10 secs
+- single node, run for 20 secs
 
 ## Solution Explanation
 
