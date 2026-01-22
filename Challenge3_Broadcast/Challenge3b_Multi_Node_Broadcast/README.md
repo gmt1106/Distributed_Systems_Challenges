@@ -18,12 +18,12 @@
 
 **How to execuate the code with Maelstorm**
 
-1. Execute Maelstorm with the path to the Challenge1_Echo binary
+1. Execute Maelstorm with the path to the Challenge3b_Multi_Node_Broadcast binary
 
 - ```bash
     ./maelstrom/maelstrom test -w broadcast --bin ~/go/bin/Challenge3b_Multi_Node_Broadcast --node-count 5 --time-limit 20 --rate 10
   ```
-- single node, run for 20 secs
+- 5 nodes, run for 20 secs
 
 ## Solution Explanation
 

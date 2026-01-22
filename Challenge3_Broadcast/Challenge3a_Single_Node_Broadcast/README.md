@@ -18,7 +18,7 @@
 
 **How to execuate the code with Maelstorm**
 
-1. Execute Maelstorm with the path to the Challenge1_Echo binary
+1. Execute Maelstorm with the path to the Challenge3a_Single_Node_Broadcast binary
 
 - ```bash
     ./maelstrom/maelstrom test -w broadcast --bin ~/go/bin/Challenge3a_Single_Node_Broadcast --node-count 1 --time-limit 20 --rate 10

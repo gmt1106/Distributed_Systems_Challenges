@@ -18,7 +18,7 @@
 
 **How to execuate the code with Maelstorm**
 
-1. Execute Maelstorm with the path to the Challenge1_Echo binary
+1. Execute Maelstorm with the path to the Challenge2_Unique_ID_Generation binary
 
 - ```bash
     ./maelstrom/maelstrom test -w unique-ids --bin ~/go/bin/Challenge2_Unique_ID_Generation --time-limit 30 --rate 1000 --node-count 3 --availability total --nemesis partition
