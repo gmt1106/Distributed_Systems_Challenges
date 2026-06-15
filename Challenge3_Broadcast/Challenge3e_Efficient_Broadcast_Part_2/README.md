@@ -78,6 +78,8 @@ Result:
 
 ## Problem
 
+Problem Source: https://fly.io/dist-sys/3e/
+
 In this challenge, we’ll make our Efficient, Multi-Node Broadcast implementation even more efficient. Why settle for a fast distributed system when you could always make faster?
 
 ### Specification

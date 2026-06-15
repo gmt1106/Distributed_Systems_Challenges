@@ -78,12 +78,12 @@ It should look something like:
 
 ### Implementing a node
 
-For this first challenge, we’ll walk you through how to implement the echo program. First, create a directory for your binary called maelstrom-echo and initialize a Go module for it:
+For this first challenge, we’ll walk you through how to implement the echo program. First, create a directory for your binary called maelstrom and initialize a Go module for it:
 
 ```bash
-$ mkdir maelstrom-echo
-$ cd maelstrom-echo
-$ go mod init maelstrom-echo
+$ mkdir maelstrom
+$ cd maelstrom
+$ go mod init maelstrom
 $ go mod tidy
 ```
 

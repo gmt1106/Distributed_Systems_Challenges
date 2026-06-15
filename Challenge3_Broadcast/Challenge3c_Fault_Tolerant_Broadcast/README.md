@@ -93,6 +93,8 @@ A parition might split them like this:
 
 ## Problem
 
+Problem Source: https://fly.io/dist-sys/3c/
+
 In this challenge, we’ll build on our Multi-Node Broadcast implementation, however, this time we’ll introduce network partitions between nodes so they will not be able to communicate for periods of time.
 
 ### Specification

@@ -110,6 +110,8 @@ rand.Perm(n):
 
 ## Problem
 
+Problem Source: https://fly.io/dist-sys/3d/
+
 In this challenge, we’ll improve on our Fault-Tolerant, Multi-Node Broadcast implementation. Distributed systems have different metrics for success. Not only do they need to be correct but they also need to be fast.
 
 The neighbors Maelstrom suggests are, by default, arranged in a two-dimensional grid. This means that messages are often duplicated en route to other nodes, and latencies are on the order of 2 \* sqrt(n) network delays.
