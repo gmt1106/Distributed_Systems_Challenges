@@ -29,13 +29,13 @@
 
 ### What the problem is really asking
 
-#### Difference between last challenge and this one
+Difference between last challenge and this one:
 
 The broadcast challenges taught me: "How do I replicate state myself across unreliable nodes?"
 
 This counter challenge teaches me the opposite lesson: "When can I not replicate at all and let a shared service do the hard part?"
 
-##### 1. Where state lives
+#### 1. Where state lives
 
 In the braodcast challenge: \
 The sate leaves inside my nodes.
@@ -55,15 +55,15 @@ seq-kv:
   "counter" → 123456
 ```
 
-##### 2. Communicational model
+#### 2. Communicational model
 
 In the braodcast challenge: \
-nodes talk to each other to kkep the consistency
+nodes talk to each other to keep the consistency
 
 In the coutner challenge: \
 nodes never talk to each other
 
-##### 3. Failure model
+#### 3. Failure model
 
 In the braodcast challenge:
 
@@ -76,7 +76,7 @@ In the coutner challenge:
 
 - Two nodes try to update the counter at the same time
 
-##### 4. Why eventual consistency is allowed
+#### 4. Why eventual consistency is allowed
 
 In the braodcast challenge: \
 Reads must reflect all delivered messages.
@@ -87,6 +87,12 @@ Reads can be stale, because
 - Counter only increases
 - Stale reads still move forward over time
 - Final value matters most
+
+#### Sequential Consistency
+
+A strong safety property for concurrent systems\
+Implies that operations appear to take place in some total order, and that that order is consistent with the order of operations on each individual process\
+Cannot be totally or sticky available; in the event of a network partition, some or all nodes will be unable to make progress
 
 ### Solution
 
@@ -141,6 +147,10 @@ To fix this, I should implement a G-Counter (Grow-Only Counter) CRDT pattern:
 - **Partition the State**: Instead of a single counter key, have each node maintain its own counter (e.g., counter_n1, counter_n2).
 - **Writes**: When a node receives an add request, it increments only its own key. This eliminates contention between nodes.
 - **Reads**: When a node receives a read request, it fetches the values of all node counters and sums them up.
+
+```go
+key := fmt.Sprintf("counter_%s", n.ID())
+```
 
 ## Problem
 

@@ -37,17 +37,10 @@ func main() {
 			cur, err := kv.ReadInt(ctx, key)
 			// key does not exist yet
 			if err != nil { 
-				// try to make a counter
-				err = kv.CompareAndSwap(ctx, key, 0, body.Delta, true)
-				// counter is created
-				if err == nil {
-					break
-				}
-				// go back to the first line of for loop and try to read the counter again
-				continue
+				cur = 0
 			}
 			// succesfully read the current counter value so now try to update the counter
-			err = kv.CompareAndSwap(ctx, key, cur, cur+body.Delta, false)
+			err = kv.CompareAndSwap(ctx, key, cur, cur+body.Delta, true)
 			// counter is updated
 			if err == nil {
 				break
