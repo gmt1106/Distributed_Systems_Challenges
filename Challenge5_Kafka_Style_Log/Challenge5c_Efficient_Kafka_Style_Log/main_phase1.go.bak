@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"sort"
 
 	maelstrom "github.com/jepsen-io/maelstrom/demo/go"
 )
@@ -14,6 +13,7 @@ type entry struct {
 	Offset int
 	Msg    int
 }
+
 
 func main() {
 	n := maelstrom.NewNode()
@@ -31,11 +31,9 @@ func main() {
 		if err := json.Unmarshal(msg.Body, &body); err != nil {
 			return err
 		}
-		
-		offsetKey := fmt.Sprintf("offset_%s", body.Key)
-		entryKey := fmt.Sprintf("entry_%s", body.Key)
-		foundCurOffset := 0
 
+		offsetKey := fmt.Sprintf("offset_%s", body.Key)
+		foundCurOffset := 0
 
 		for {
 			// try to get offset by key
@@ -44,38 +42,25 @@ func main() {
 			if offsetErr != nil {
 				curOffset = 0
 			}
-			// increment offset
+			// increment offset by one
 			offsetErr = kv.CompareAndSwap(ctx, offsetKey, curOffset, curOffset + 1, true)
 			// offset is not incremented. Get a new one
 			if offsetErr != nil {
 				continue
 			}
 
-			// offset found!
+			// offset is found!
 			foundCurOffset = curOffset
 
-			for {
-				// try to get entry by key
-				val, entryErr := kv.Read(ctx, entryKey)
-				curEntry := []entry{}
-				// key exist, convert val to Entry list
-				if entryErr == nil {
-					json.Unmarshal([]byte(val.(string)), &curEntry)
-				}
-
-				// add new entry with offset
-				curEntry = append(curEntry, entry{Offset: foundCurOffset, Msg: body.Msg})
-				bytes, _ := json.Marshal(curEntry)
-				// update entry list
-				entryErr = kv.CompareAndSwap(ctx, entryKey, val, string(bytes), true)
-
-				// entry is added. Stop retry.
-				if entryErr == nil {
-					break
-				}
-			}
-			break
+			break;
 		}
+
+		// create message key
+		msgKey := fmt.Sprintf("msg_%s_%d", body.Key, foundCurOffset)
+
+		// write the log
+		kv.Write(ctx, msgKey, body.Msg)
+
 
 		return n.Reply(msg, map[string]any{
 			"type": "send_ok",
@@ -102,33 +87,24 @@ func main() {
 
 		for key, offset := range body.Offsets {
 
-			entryKey := fmt.Sprintf("entry_%s", key)
-			
-			val, entryErr := kv.Read(ctx, entryKey)
-			curEntry := []entry{}
+			nextOffset := offset
 
-			// key exist, convert val to Entry list
-			if entryErr == nil {
-				json.Unmarshal([]byte(val.(string)), &curEntry)
-			}
-
-			// sort
-			sort.Slice(curEntry, func(i, j int) bool {
-    			return curEntry[i].Offset < curEntry[j].Offset
-			})
-
-			expected := offset
-
-			for _, entry := range curEntry {
+			// try to get message with next offset until not found
+			for {
 				
-				if entry.Offset < offset {
-        			continue
-    			}
-				if entry.Offset != expected {
-        			break  // gap found, stop here
-    			}
-				msgs[key] = append(msgs[key], [2]int{entry.Offset, entry.Msg})
-				expected++
+				// create message key
+				msgKey := fmt.Sprintf("msg_%s_%d", key, nextOffset)
+
+				// read next message
+				val, err := kv.ReadInt(ctx, msgKey)
+
+				// message with this key does not exist
+				if err != nil {
+					break
+				}
+
+				msgs[key] = append(msgs[key], [2]int{nextOffset, val})
+				nextOffset++
 			}
 		}
 

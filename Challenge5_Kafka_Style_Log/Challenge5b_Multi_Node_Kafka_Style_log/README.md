@@ -87,7 +87,7 @@ No more in-memory maps
 kv := maelstrom.NewLinKV(n)
 // then use keys like:
 // "offset_k1", "offset_k2"    → for keyOffset
-// "entries_k1", "entries_k2"  → for keyEntry
+// "entries_k1", "entries_k2"  → for keyEntry (list of log)
 // "committed_k1"              → for committedOffset
 ```
 
