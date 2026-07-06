@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"hash/fnv"
 	"log"
@@ -24,6 +25,32 @@ var (
 	localCommittedOffset   = make(map[string]int)
 )
 
+// func syncRPC(n *maelstrom.Node, dest string, body any) (maelstrom.Message, error) {
+//   // Creates a buffered channel that can hold one message
+//   // This is used to pass the response back from the async callback
+//     ch := make(chan maelstrom.Message, 1)
+
+//   // Sends the message to dest and registers a callback
+//   // When the response arrives (in a different goroutine), the callback puts it into the channel
+//   // <- is Go's channel operator
+//   // Its direction indicates whether you're sending or receiving
+//     if err := n.RPC(dest, body, func(resp maelstrom.Message) error {
+//     // Sending into a channel (arrow points into channel):
+//     // "Put resp into ch."
+//     // The callback goroutine pushes the response into the channel
+//         ch <- resp
+//         return nil
+//     });
+
+//   err != nil {
+//         return maelstrom.Message{}, err
+//     }
+
+//   // Receiving from a channel (arrow points away from channel):
+//   // "Take a value out of ch."
+//   // The current goroutine blocks here until something arrives in the channel, then returns it
+//     return <-ch, nil
+// }
 
 func ownerOf(key string, nodeIDs []string) string {
 	// Creates a FNV hash function. FNV is a fast, simple hash algorithm
@@ -37,33 +64,6 @@ func ownerOf(key string, nodeIDs []string) string {
     return nodeIDs[int(hashFun.Sum32())%len(nodeIDs)]
 }
 
-func syncRPC(n *maelstrom.Node, dest string, body any) (maelstrom.Message, error) {
-	// Creates a buffered channel that can hold one message
-	// This is used to pass the response back from the async callback
-    ch := make(chan maelstrom.Message, 1)
-
-	// Sends the message to dest and registers a callback
-	// When the response arrives (in a different goroutine), the callback puts it into the channel
-	// <- is Go's channel operator
-	// Its direction indicates whether you're sending or receiving
-    if err := n.RPC(dest, body, func(resp maelstrom.Message) error {
-		// Sending into a channel (arrow points into channel):
-		// "Put resp into ch."
-		// The callback goroutine pushes the response into the channel
-        ch <- resp
-        return nil
-    });
-	
-	err != nil {
-        return maelstrom.Message{}, err
-    }
-
-	// Receiving from a channel (arrow points away from channel):
-	// "Take a value out of ch."
-	// The current goroutine blocks here until something arrives in the channel, then returns it
-    return <-ch, nil
-}
-	
 func main() {
 	n := maelstrom.NewNode()
 
@@ -85,7 +85,7 @@ func main() {
 		ownerNodeId := ownerOf(body.Key, n.NodeIDs())
 		if ownerNodeId != n.ID() {
 			// forward to owner, get response, relay to client
-			resp, err := syncRPC(n, ownerNodeId, map[string]any{
+			resp, err := n.SyncRPC(context.Background(), ownerNodeId, map[string]any{
 				"type": "send",
 				"key":  body.Key,
 				"msg":  body.Msg,
@@ -153,7 +153,7 @@ func main() {
 
 		// send one batched RPC per owner node
 		for ownerNodeId, offsets := range ownerOffsets {
-			resp, err := syncRPC(n, ownerNodeId, map[string]any{
+			resp, err := n.SyncRPC(context.Background(), ownerNodeId, map[string]any{
 				"type":    "poll",
 				"offsets": offsets,
 			})
@@ -211,7 +211,7 @@ func main() {
 
 		// forward the request to owner node
 		for ownerNodeId, offsets := range ownerOffsets {
-			_, err := syncRPC(n, ownerNodeId, map[string]any{
+			_, err := n.SyncRPC(context.Background(), ownerNodeId, map[string]any{
 				"type":    "commit_offsets",
 				"offsets": offsets,
 			})
@@ -260,7 +260,7 @@ func main() {
 
 		// forward to key owner
 		for ownerNodeId, keys := range ownerKeys {
-			resp, err := syncRPC(n, ownerNodeId, map[string]any{
+			resp, err := n.SyncRPC(context.Background(), ownerNodeId, map[string]any{
 				"type": "list_committed_offsets",
 				"keys": keys,
 			})
