@@ -45,33 +45,33 @@ func applyWrite(key int, value int, v version) {
 }
 
 func fanOutReplicate(n *maelstrom.Node, txn [][3]any, v version) {
-    replicateBody := map[string]any{"type": "replicate", "txn": txn, "version": v}
+	replicateBody := map[string]any{"type": "replicate", "txn": txn, "version": v}
 
 	// replicate the message to all nodes except current one
-    for _, dest := range n.NodeIDs() {
-        if dest == n.ID() {
-            continue
-        }
-        go replicateWithRetry(n, dest, replicateBody)
-    }
+	for _, dest := range n.NodeIDs() {
+		if dest == n.ID() {
+			continue
+		}
+		go replicateWithRetry(n, dest, replicateBody)
+	}
 }
 
 func replicateWithRetry(n *maelstrom.Node, dest string, body any) {
 
 	// keep quietly retrying until it eventually works
-    for {
+	for {
 		// this code is tested under partitions with a total-availability requirement
 		// so a call that can block forever is unacceptable
 		// it gives you a bounded call you can retry, rather than one that might hang your goroutine indefinitely
-        ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-        _, err := n.SyncRPC(ctx, dest, body)
-        cancel()
-        if err == nil {
-            return
-        }
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		_, err := n.SyncRPC(ctx, dest, body)
+		cancel()
+		if err == nil {
+			return
+		}
 		// It gives the partition time to actually change state
-        time.Sleep(200 * time.Millisecond)
-    }
+		time.Sleep(200 * time.Millisecond)
+	}
 }
 
 func main() {
@@ -80,8 +80,8 @@ func main() {
 	n.Handle("txn", func(msg maelstrom.Message) error {
 
 		var body struct {
-			Type string        `json:"type"`
-			Txn  [][3]any      `json:"txn"`
+			Type string   `json:"type"`
+			Txn  [][3]any `json:"txn"`
 		}
 
 		if err := json.Unmarshal(msg.Body, &body); err != nil {

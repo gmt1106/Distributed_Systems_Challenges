@@ -113,6 +113,27 @@ This mirrors the broadcast challenge's gossip pattern (local-write-then-async-pr
 | Receiver-side logic                 | Trivial: `store[key] = value` on each message                                                  | Slightly more: lock once, loop over the batch, unlock                                              |
 | Relevance to this challenge (6b)    | Sufficient — G0 rarely arises in this workload, and Maelstrom's checker can't detect G0 anyway | Overkill for passing 6b, but better practice heading into Read Committed (6c)                      |
 
+#### bug
+
+keyValueStore[key] = value in both the txn handler and replicate handler overwrites unconditionally. Whichever write arrives last at a node will decide the final value, and "last" can differ per node, causing permanent divergence on the same key.
+
+The fix: attach a version to every write, and only overwrite if the incoming version is newer.
+
+1. **A version type**: `{Counter int, NodeID string}` a pair that can be compared: higher counter wins; if counters tie, compare NodeID strings as a tiebreak.
+2. **Per-node state**: a `keyVersion map[int]version` (parallel to keyValueStore) recording which version is currently "in" each key, plus a `localCounter int` that increments every time this node originates a new write.
+3. **applyWrite(key, value, v) helper**: replaces the bare map assignment. It checks `keyVersion[key]` and only writes `keyValueStore[key]` and `keyVersion[key]` if `v:= version{localCounter, n.ID()}` is greater than what's currently stored. Otherwise it's a no-op.
+4. **fanOutReplicate**: gains a `v version` parameter, includes it in the outgoing replicate message body as "version": v.
+
+Net effect: local writes always apply immediately. Remote replicate messages only overwrite if they're genuinely newer by the shared comparison rule. So regardless of arrival order, every node converges on the same final value for a given key. Total availability is untouched because this is a pure local comparison, no coordination with peers needed.
+
+#### bug 2: same key written twice in one transaction
+
+Not caught by 6b's own test (G0 doesn't check this), but surfaced by running this exact code against 6c's stronger read-committed checker: a transaction that writes the same key twice (e.g. `["w", 7, 4]` then later `["w", 7, 5]`) ended up storing `4`, the intermediate value, instead of `5`, the real final write.
+
+Root cause: `v := version{localCounter, n.ID()}` is built once per transaction and reused for every write op in it. `applyWrite` only overwrites on a *strictly greater* version, so the second write to the same key ties with the first (same version) and loses — the intermediate value sticks.
+
+The fix: add an `OpIndex int` field to `version`, set to the write's position within its txn's op list, compared between `Counter` and `NodeID`. A later write to the same key in the same txn now always outranks an earlier one, even though they share `Counter`/`NodeID`. `OpIndex` isn't sent over the wire (`json:"-"`) — the `replicate` handler reconstructs it locally from its own loop index, since it iterates the identical, identically-ordered op array the sender did.
+
 ## Problem
 
 Problem Source: https://fly.io/dist-sys/6b/
@@ -121,7 +142,7 @@ In this challenge, we’ll take our key/value store from the Single-Node Totally
 
 Read Uncommitted is an incredibly weak consistency model. It prohibits only a single anomaly:
 
-    G0 (dirty write): a cycle of transactions linked by write-write dependencies. For instance, transaction T1 appends 1 to key x, transaction T2 appends 2 to x, and T1 appends 3 to x again, producing the value [1, 2, 3].
+- **G0 (dirty write)**: a cycle of transactions linked by write-write dependencies. For instance, transaction T1 appends 1 to key x, transaction T2 appends 2 to x, and T1 appends 3 to x again, producing the value [1, 2, 3].
 
 ### Specification
 
